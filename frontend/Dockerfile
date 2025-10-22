@@ -9,8 +9,10 @@ WORKDIR /app
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm install
+# Instalar dependencias con reintentos (3 intentos)
+RUN npm install --network-timeout=300000 || \
+    npm install --network-timeout=300000 || \
+    npm install --network-timeout=300000
 
 # Copiar todo el código fuente
 COPY . .
