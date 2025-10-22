@@ -13,12 +13,6 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
-      interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 300s
 
   # Backend Flask
   backend:
@@ -31,8 +25,7 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     restart: unless-stopped
     volumes:
       - ./backend:/app
