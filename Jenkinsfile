@@ -21,21 +21,27 @@ pipeline {
         stage('Detener Contenedores') {
             steps {
                 echo ' Deteniendo contenedores anteriores...'
-                bat 'docker-compose down || exit 0'
+                dir("${env.WORKSPACE}") {
+                    bat 'docker-compose down || exit 0'
+                }
             }
         }
         
         stage('Construir Imágenes') {
             steps {
                 echo " Construyendo imágenes: ${BACKEND_IMAGE}, ${FRONTEND_IMAGE}, ${DB_IMAGE}"
-                bat 'docker-compose build'
+                dir("${env.WORKSPACE}") {
+                    bat 'docker-compose build --no-cache'
+                }
             }
         }
         
         stage('Iniciar Aplicación') {
             steps {
                 echo " Iniciando contenedores en puertos: Backend:${BACKEND_PORT}, Frontend:${FRONTEND_PORT}, DB:${DB_PORT}"
-                bat 'docker-compose up -d'
+                dir("${env.WORKSPACE}") {
+                    bat 'docker-compose up -d'
+                }
             }
         }
         
@@ -57,7 +63,9 @@ pipeline {
         
         failure {
             echo ' El despliegue falló'
-            bat 'docker-compose logs'
+            dir("${env.WORKSPACE}") {
+                bat 'docker-compose logs'
+            }
         }
     }
 }
