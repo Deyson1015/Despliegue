@@ -22,7 +22,7 @@ pipeline {
             steps {
                 echo ' Deteniendo contenedores anteriores...'
                 dir("${env.WORKSPACE}") {
-                    bat 'docker-compose down || exit 0'
+                    bat 'docker-compose down -v || exit 0'
                 }
             }
         }

@@ -15,9 +15,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 10s
       timeout: 5s
       retries: 10
-      interval: 3s
+      start_period: 40s
 
   # Backend Flask
   backend:
