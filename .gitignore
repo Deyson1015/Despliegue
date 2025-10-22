@@ -1,0 +1,32 @@
+# Archivos de entorno locales
+.env
+.env.local
+
+# NO ignorar archivos .env.docker (necesarios para Docker Compose)
+!.env.docker
+!**/.env.docker
+
+# Logs
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# Node
+node_modules/
+dist/

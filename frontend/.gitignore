@@ -19,6 +19,9 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# NO ignorar .env.docker (necesario para Docker Compose)
+!.env.docker
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
