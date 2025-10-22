@@ -7,8 +7,10 @@ WORKDIR /app
 # Instalar dependencias
 COPY requirements.txt .
 
-# Instalar Gunicorn y otras dependencias
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar Gunicorn y otras dependencias con reintentos (3 intentos)
+RUN pip install --default-timeout=300 --no-cache-dir -r requirements.txt || \
+    pip install --default-timeout=300 --no-cache-dir -r requirements.txt || \
+    pip install --default-timeout=300 --no-cache-dir -r requirements.txt
 
 # Copiar el código de la aplicación
 COPY . .
