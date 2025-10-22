@@ -27,11 +27,36 @@ pipeline {
             }
         }
         
+        stage('Verificar Archivos') {
+            steps {
+                echo ' Verificando archivos necesarios...'
+                dir("${env.WORKSPACE}") {
+                    bat '''
+                        echo Verificando estructura del proyecto:
+                        dir
+                        echo.
+                        echo Verificando Dockerfile del backend:
+                        dir backend
+                        echo.
+                        echo Verificando Dockerfile del frontend:
+                        dir frontend
+                        echo.
+                        echo Verificando docker-compose.yml:
+                        type docker-compose.yml
+                    '''
+                }
+            }
+        }
+        
         stage('Construir Imágenes') {
             steps {
                 echo " Construyendo imágenes: ${BACKEND_IMAGE}, ${FRONTEND_IMAGE}, ${DB_IMAGE}"
                 dir("${env.WORKSPACE}") {
-                    bat 'docker-compose build --no-cache'
+                    bat '''
+                        set DOCKER_BUILDKIT=0
+                        set COMPOSE_DOCKER_CLI_BUILD=0
+                        docker-compose build --no-cache
+                    '''
                 }
             }
         }

@@ -21,7 +21,9 @@ services:
 
   # Backend Flask
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: backend-personas
     env_file:
       - ./backend/.env.docker
@@ -36,7 +38,9 @@ services:
 
   # Frontend React
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: frontend-personas
     env_file:
       - ./frontend/.env.docker
