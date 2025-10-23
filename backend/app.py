@@ -7,7 +7,18 @@ import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
-CORS(app)
+
+# Configurar CORS para producción
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",  # En producción, especifica tu dominio de Vercel
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "expose_headers": ["Content-Type"],
+        "supports_credentials": False,
+        "max_age": 3600
+    }
+})
 
 # Inicializar base de datos
 init_db()
