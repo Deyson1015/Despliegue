@@ -2,34 +2,31 @@ pipeline {
     agent any
     
     environment {
-        BACKEND_IMAGE = 'gestion-personas-backend'
-        FRONTEND_IMAGE = 'gestion-personas-frontend'
-        DB_IMAGE = 'mysql:8.0'
+        // Credenciales de Docker Hub (configuradas en Jenkins)
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        DOCKERHUB_USER = "${DOCKERHUB_CREDENTIALS_USR}"
+        DOCKERHUB_PASS = "${DOCKERHUB_CREDENTIALS_PSW}"
+        
+        // Nombres de las imágenes en Docker Hub
+        BACKEND_IMAGE = "urrego/backend_personas"
+        FRONTEND_IMAGE = "urrego/frontend_personas"
+        
+        // Variables locales
         BACKEND_PORT = '5000'
         FRONTEND_PORT = '5173'
-        DB_PORT = '3307'
     }
     
     stages {
         stage('Checkout') {
             steps {
-                echo ' Descargando código...'
+                echo ' Descargando código desde GitHub...'
                 checkout scm
             }
         }
         
-        stage('Detener Contenedores') {
+        stage('Construir Imágenes Docker') {
             steps {
-                echo ' Deteniendo contenedores anteriores...'
-                dir("${env.WORKSPACE}") {
-                    bat 'docker-compose down -v || exit 0'
-                }
-            }
-        }
-        
-        stage('Construir Imágenes') {
-            steps {
-                echo " Construyendo imágenes: ${BACKEND_IMAGE}, ${FRONTEND_IMAGE}, ${DB_IMAGE}"
+                echo " Construyendo imágenes: ${BACKEND_IMAGE} y ${FRONTEND_IMAGE}"
                 dir("${env.WORKSPACE}") {
                     bat '''
                         set DOCKER_BUILDKIT=0
@@ -40,36 +37,70 @@ pipeline {
             }
         }
         
-        stage('Iniciar Aplicación') {
+        stage('Login en Docker Hub') {
             steps {
-                echo " Iniciando contenedores en puertos: Backend:${BACKEND_PORT}, Frontend:${FRONTEND_PORT}, DB:${DB_PORT}"
-                dir("${env.WORKSPACE}") {
-                    bat 'docker-compose up -d'
-                }
+                echo ' Iniciando sesión en Docker Hub...'
+                bat '''
+                    echo %DOCKERHUB_PASS% | docker login -u %DOCKERHUB_USER% --password-stdin
+                '''
             }
         }
         
-        stage('Verificar Estado') {
+        stage('Etiquetar Imágenes') {
             steps {
-                echo ' Verificando contenedores...'
-                bat 'docker ps'
-                echo " Backend: http://localhost:${BACKEND_PORT}"
-                echo " Frontend: http://localhost:${FRONTEND_PORT}"
-                echo " MySQL: localhost:${DB_PORT}"
+                echo ' Etiquetando imágenes para Docker Hub...'
+                bat """
+                    docker tag despliegue-backend:latest ${BACKEND_IMAGE}:latest
+                    docker tag despliegue-frontend:latest ${FRONTEND_IMAGE}:latest
+                """
+            }
+        }
+        
+        stage('Publicar en Docker Hub') {
+            steps {
+                echo ' Subiendo imágenes a Docker Hub...'
+                bat """
+                    docker push ${BACKEND_IMAGE}:latest
+                    docker push ${FRONTEND_IMAGE}:latest
+                """
+            }
+        }
+        
+        stage('Limpiar Imágenes Locales') {
+            steps {
+                echo ' Limpiando imágenes locales...'
+                bat '''
+                    docker image prune -f
+                '''
+            }
+        }
+        
+        stage('Notificar a Render') {
+            steps {
+                echo ' Imágenes publicadas en Docker Hub'
+                echo ' Render puede ahora descargar las últimas versiones'
+                echo "   Backend: ${BACKEND_IMAGE}:latest"
+                echo "   Frontend: ${FRONTEND_IMAGE}:latest"
             }
         }
     }
     
     post {
         success {
-            echo ' ¡Despliegue exitoso!'
+            echo ' Pipeline completado exitosamente'
+            echo ' Las imágenes están listas en Docker Hub'
         }
         
         failure {
-            echo ' El despliegue falló'
+            echo ' El pipeline falló'
             dir("${env.WORKSPACE}") {
-                bat 'docker-compose logs'
+                bat 'docker-compose logs || exit 0'
             }
+        }
+        
+        always {
+            echo ' Cerrando sesión de Docker Hub'
+            bat 'docker logout || exit 0'
         }
     }
 }
