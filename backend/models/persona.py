@@ -23,7 +23,9 @@ class Persona:
         )
         
         try:
-            db.conectar()
+            if not db.conectar():
+                raise Exception("No se pudo establecer conexión con la base de datos")
+            
             db.cursor.execute(consulta, parametros)
             db.connection.commit()
             nuevo_id = db.cursor.lastrowid
@@ -41,7 +43,9 @@ class Persona:
         consulta = "SELECT * FROM personas"
         
         try:
-            db.conectar()
+            if not db.conectar():
+                raise Exception("No se pudo establecer conexión con la base de datos")
+            
             db.cursor.execute(consulta)
             resultados = db.cursor.fetchall()
             db.cerrar()
@@ -56,7 +60,9 @@ class Persona:
         consulta = "SELECT * FROM personas WHERE id = %s"
         
         try:
-            db.conectar()
+            if not db.conectar():
+                raise Exception("No se pudo establecer conexión con la base de datos")
+            
             db.cursor.execute(consulta, (id,))
             resultado = db.cursor.fetchone()
             db.cerrar()
@@ -100,7 +106,9 @@ class Persona:
         consulta = f"UPDATE personas SET {', '.join(campos)} WHERE id = %s"
         
         try:
-            db.conectar()
+            if not db.conectar():
+                raise Exception("No se pudo establecer conexión con la base de datos")
+            
             db.cursor.execute(consulta, tuple(valores))
             db.connection.commit()
             filas_afectadas = db.cursor.rowcount
@@ -118,7 +126,9 @@ class Persona:
         consulta = "DELETE FROM personas WHERE id = %s"
         
         try:
-            db.conectar()
+            if not db.conectar():
+                raise Exception("No se pudo establecer conexión con la base de datos")
+            
             db.cursor.execute(consulta, (id,))
             db.connection.commit()
             filas_afectadas = db.cursor.rowcount
@@ -141,7 +151,9 @@ class Persona:
             parametros = (numero_documento,)
         
         try:
-            db.conectar()
+            if not db.conectar():
+                raise Exception("No se pudo establecer conexión con la base de datos")
+            
             db.cursor.execute(consulta, parametros)
             resultado = db.cursor.fetchone()
             db.cerrar()
@@ -164,11 +176,41 @@ class Persona:
             parametros = (correo,)
 
         try:
-            db.conectar()
+            if not db.conectar():
+                raise Exception("No se pudo establecer conexión con la base de datos")
+            
             db.cursor.execute(consulta, parametros)
             resultado = db.cursor.fetchone()
             db.cerrar()
             return resultado is not None
+        except Exception as e:
+            db.cerrar()
+            raise e
+    
+    # Buscar personas por término
+    @staticmethod
+    def buscar(termino):
+        consulta = """
+        SELECT * FROM personas 
+        WHERE primer_nombre LIKE %s 
+        OR segundo_nombre LIKE %s 
+        OR primer_apellido LIKE %s 
+        OR segundo_apellido LIKE %s 
+        OR numero_documento LIKE %s 
+        OR correo_electronico LIKE %s 
+        OR telefono LIKE %s
+        """
+        patron = f"%{termino}%"
+        parametros = (patron, patron, patron, patron, patron, patron, patron)
+        
+        try:
+            if not db.conectar():
+                raise Exception("No se pudo establecer conexión con la base de datos")
+            
+            db.cursor.execute(consulta, parametros)
+            resultados = db.cursor.fetchall()
+            db.cerrar()
+            return resultados
         except Exception as e:
             db.cerrar()
             raise e
