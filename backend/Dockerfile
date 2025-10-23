@@ -24,5 +24,6 @@ RUN chmod +x wait-for-db.sh
 # Exponer el puerto 5000
 EXPOSE 5000
 
-# Esperar a MySQL y luego iniciar Gunicorn
-CMD ["sh", "-c", "./wait-for-db.sh && gunicorn --bind 0.0.0.0:5000 --workers 2 app:app"]
+# Para producción (Render/Railway), iniciar directamente Gunicorn
+# El script wait-for-db.sh es opcional, solo para Docker local
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "app:app"]
