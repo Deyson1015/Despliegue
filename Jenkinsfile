@@ -12,6 +12,13 @@ pipeline {
         RENDER_HOOK_FRONTEND = "https://api.render.com/deploy/srv-d3tgb07diees73dhc2pg?key=vVmiLSQLLHs"
     }
 
+    // Webhook para GitHub Push
+    triggers {
+
+        githubPush()
+
+    }
+
     stages {
 
         stage('Checkout') {
@@ -19,7 +26,7 @@ pipeline {
                 echo ' Descargando código desde GitHub...'
                 withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
                     git(
-                        url: 'https://github.com/tu_usuario/tu_repo.git',
+                        url: 'https://github.com/Deyson1015/Despliegue.git',
                         credentialsId: 'github-token',
                         branch: 'main'
                     )
