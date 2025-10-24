@@ -1,18 +1,19 @@
 pipeline {
     agent any
-    
+
     environment {
-        // Nombres de las imágenes en Docker Hub
         BACKEND_IMAGE = "urrego/backend_personas"
         FRONTEND_IMAGE = "urrego/frontend_personas"
-
-        // Variables locales
         BACKEND_PORT = '5000'
         FRONTEND_PORT = '5173'
-    }
-    
-    stages {
 
+        // URL del webhook de Render
+        RENDER_HOOK_BACKEND = "https://api.render.com/deploy/srv-d3tfrjili9vc73bbatg0?key=5VGOW2ELP0o"
+        
+        RENDER_HOOK_FRONTEND = "https://api.render.com/deploy/srv-d3tgb07diees73dhc2pg?key=vVmiLSQLLHs"
+    }
+
+    stages {
         stage('Checkout') {
             steps {
                 echo ' Descargando código desde GitHub...'
@@ -73,9 +74,16 @@ pipeline {
 
         stage('Notificar a Render') {
             steps {
-                echo ' Imágenes publicadas en Docker Hub'
-                echo "   Backend: ${BACKEND_IMAGE}:latest"
-                echo "   Frontend: ${FRONTEND_IMAGE}:latest"
+                echo '  Notificando despliegue de backend a Render...'
+                bat """
+                    curl -X POST %RENDER_HOOK_BACKEND%
+                    echo " Despliegue de backend notificado a Render."
+                """
+                echo '  Notificando despliegue de frontend a Render...'
+                bat """
+                    curl -X POST %RENDER_HOOK_FRONTEND%
+                    echo " Despliegue de frontend notificado a Render."
+                """
             }
         }
     }
@@ -98,3 +106,4 @@ pipeline {
         }
     }
 }
+           
