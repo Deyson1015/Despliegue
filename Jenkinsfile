@@ -9,15 +9,28 @@ pipeline {
 
         // URL del webhook de Render
         RENDER_HOOK_BACKEND = "https://api.render.com/deploy/srv-d3tfrjili9vc73bbatg0?key=5VGOW2ELP0o"
-        
         RENDER_HOOK_FRONTEND = "https://api.render.com/deploy/srv-d3tgb07diees73dhc2pg?key=vVmiLSQLLHs"
     }
 
+    // Webhook para GitHub Push
+    triggers {
+
+        githubPush()
+
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
                 echo ' Descargando código desde GitHub...'
-                checkout scm
+                withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                    git(
+                        url: 'https://github.com/Deyson1015/Despliegue.git',
+                        credentialsId: 'github-token',
+                        branch: 'main'
+                    )
+                }
             }
         }
 
@@ -106,4 +119,3 @@ pipeline {
         }
     }
 }
-        
