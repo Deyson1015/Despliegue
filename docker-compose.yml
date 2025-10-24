@@ -25,6 +25,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: despliegue-backend:latest
     container_name: backend-personas
     env_file:
       - ./backend/.env.docker
@@ -42,6 +43,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: despliegue-frontend:latest
     container_name: frontend-personas
     env_file:
       - ./frontend/.env.docker
