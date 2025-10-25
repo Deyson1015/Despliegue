@@ -30,3 +30,9 @@ env/
 # Node
 node_modules/
 dist/
+
+.pytest_cache/
+.coverage
+
+
+

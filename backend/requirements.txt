@@ -3,3 +3,8 @@ Flask-CORS==4.0.0
 mysql-connector-python==8.2.0
 python-dotenv==1.0.0
 gunicorn==21.2.0
+
+# Testing dependencies
+pytest==8.4.2
+pytest-flask==1.2.0
+

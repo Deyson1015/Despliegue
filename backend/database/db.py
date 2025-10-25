@@ -1,21 +1,34 @@
 import mysql.connector
 from mysql.connector import Error
-from config.config import Config
-import time
+from flask import current_app
 
 class Database:
+    
     def __init__(self):
-        self.host = Config.DB_HOST
-        self.port = Config.DB_PORT
-        self.database = Config.DB_NAME
-        self.user = Config.DB_USER
-        self.password = Config.DB_PASSWORD
+        self.host = None
+        self.port = None
+        self.database = None
+        self.user = None
+        self.password = None
         self.connection = None
         self.cursor = None
 
+    def init_app(self, config):
+        """Carga la configuración de la base de datos desde la app Flask."""
+        self.host = config['DB_HOST']
+        self.port = config['DB_PORT']
+        self.database = config['DB_NAME']
+        self.user = config['DB_USER']
+        self.password = config['DB_PASSWORD']
+
     def conectar(self):
+        """Conecta a MySQL. Retorna True si éxito, False si falla."""
         try:
-            print(f"Conectando a MySQL en {self.host}:{self.port}/{self.database}...")
+            # Asegurarse de que la configuración ha sido inicializada
+            if not self.host:
+                self.init_app(current_app.config)
+
+            print(f" Conectando a MySQL en {self.host}:{self.port}/{self.database}...")
             self.connection = mysql.connector.connect(
                 host=self.host,
                 port=self.port,
@@ -36,39 +49,34 @@ class Database:
         return False
 
     def cerrar(self):
-        if self.cursor:
-            self.cursor.close()
-        if self.connection and self.connection.is_connected():
-            self.connection.close()
+        """Cierra el cursor y la conexión de forma segura."""
+        try:
+            if self.cursor:
+                self.cursor.close()
+            if self.connection and self.connection.is_connected():
+                self.connection.close()
+                print("Conexión a MySQL cerrada")
+        except Exception as e:
+            print(f" Error al cerrar conexión: {e}")
 
 # Instancia global
 db = Database()
 
 def init_db():
     """Inicializa la base de datos y crea la tabla si no existe"""
+    db.init_app(current_app.config)
+    
     print("=" * 60)
     print(" Iniciando conexión a MySQL...")
     print("=" * 60)
 
-    # Reintentar conexión hasta 30 veces (aproximadamente 1 minuto)
-    max_intentos = 30
-    intentos = 0
-    
-    while intentos < max_intentos:
-        intentos += 1
-        print(f"Intento {intentos}/{max_intentos} de conexión a MySQL...")
-        
-        if db.conectar():
-            break
-        
-        if intentos < max_intentos:
-            print(" Esperando 2 segundos antes de reintentar...")
-            time.sleep(2)
-        else:
-            print(" No se pudo conectar a la base de datos después de múltiples intentos.")
-            return False
+    # Conectar (el healthcheck ya garantiza que MySQL está listo)
+    if not db.conectar():
+        print("❌ No se pudo conectar a la base de datos")
+        return False
 
     try:
+        # Crear tabla (sin DROP - mantiene datos entre reinicios)
         tabla = """
         CREATE TABLE IF NOT EXISTS personas (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,8 +98,9 @@ def init_db():
         print(" Base de datos lista para usar")
         print("=" * 60)
         return True
+        
     except Exception as e:
         print(f" Error al crear tabla: {e}")
+        if db.connection:
+            db.connection.rollback()
         return False
-    finally:
-        db.cerrar()

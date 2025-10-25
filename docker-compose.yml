@@ -9,7 +9,7 @@ services:
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin123
     ports:
-      - "3306:3306"
+      - "3307:3306"  # Puerto 3307 en host -> 3306 en contenedor
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped

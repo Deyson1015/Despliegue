@@ -34,6 +34,31 @@ pipeline {
             }
         }
 
+        stage('Configurar Base de Datos para Tests') {
+            steps {
+                echo ' Levantando contenedor MySQL para tests...'
+                dir("${env.WORKSPACE}") {
+                    bat '''
+                        docker-compose up -d db
+                        timeout /t 15 /nobreak
+                    '''
+                }
+            }
+        }
+
+        stage('Ejecutar Tests Backend') {
+            steps {
+                echo ' Ejecutando tests del backend...'
+                dir("${env.WORKSPACE}/backend") {
+                    bat '''
+                        pip install -r requirements.txt
+                        set APP_ENV=testing
+                        python -m pytest test/test_app.py -v --tb=short
+                    '''
+                }
+            }
+        }
+
         stage('Construir Imágenes Docker') {
             steps {
                 echo " Construyendo imágenes Docker..."
@@ -107,13 +132,15 @@ pipeline {
         }
 
         failure {
-            echo 'El pipeline falló, mostrando logs...'
+            echo ' El pipeline falló, mostrando logs...'
             dir("${env.WORKSPACE}") {
                 bat 'docker-compose logs || exit 0'
             }
         }
 
         always {
+            echo 'Limpiando contenedores de test...'
+            bat 'docker-compose down || exit 0'
             echo ' Cerrando sesión de Docker Hub'
             bat 'docker logout || exit 0'
         }
